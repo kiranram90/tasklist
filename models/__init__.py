@@ -1,0 +1,1 @@
+from .task import Task, db  # Import the Task model and db instance
