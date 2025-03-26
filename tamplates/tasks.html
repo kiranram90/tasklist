@@ -1,0 +1,34 @@
+{% extends "base.html" %}  
+{% block content %} 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Tasks</title>
+  <style>
+    body { font-family: Arial; }
+    .task { margin-bottom: 10px; }
+    .done { color: green; }
+    .not-done { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Your Tasks</h1>
+  {% for task in tasks %}
+    <div class="task">
+      <strong>{{ task.title }}</strong> - 
+      {% if task.completed %}
+        <span class="done">Completed</span>
+      {% else %}
+        <span class="not-done">Pending</span>
+      {% endif %}
+    </div>
+  {% else %}
+    <p>No tasks yet.</p>
+  {% endfor %}
+</body>
+</html>
+
+
+{% endblock %}
