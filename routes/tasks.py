@@ -28,14 +28,12 @@ def get_tasks():
 
     if completed_param is not None:
         if completed_param.lower() == 'true':
-            query = Task.query.filter(Task.completed.is_(True))
+            query = query.filter(Task.completed.is_(True))
         elif completed_param.lower() == 'false':
-            query = Task.query.filter(Task.completed.is_(False))
+            query = query.filter(Task.completed.is_(False))
         else:
             return jsonify({"error": "Invalid value for 'completed'. Use 'true' or 'false'." })
     
-    else:
-        query = Task.query # fallback if no filtering provided. Used in next line
     
     
     pagination = query.paginate(page=page, per_page=per_page, error_out=False) ##It only fetches the specific page of results — not all of them. This is the task.query.all() setup happening
@@ -58,8 +56,10 @@ def get_task_id(id):
     return task_schema.jsonify(task), 200
 
 @tasks_bp.route('/tasks/<int:id>', methods=['PUT'])
+@jwt_required()
 def edit_completed(id):
-    task = Task.query.get(id) 
+    user_id = get_jwt_identity()
+    task = Task.query.filter_by(id=id, user_id=user_id).first() 
     if not task:
         abort(404, description="Task not Found")
 
@@ -79,22 +79,24 @@ def edit_completed(id):
     
 
 @tasks_bp.route('/tasks', methods=['POST'])
+@jwt_required()
 def create_task():
+    user_id = get_jwt_identity()
     data = request.get_json()
-    print(data)
-    if not 'completed' or 'title' not in data:
+    
+    if 'completed' not in data or 'title' not in data:
         abort(400, description = "Please enter all required data")
 
     stripped_title = data['title'].strip()
     if len(stripped_title) <= 1 or stripped_title == " ": 
         abort(400, description = "Title cannot be empty or less than 1 character" )
-    else: new_title = data['title']
+    else: new_title = stripped_title
     new_completed = data['completed']
 
     if type(new_completed) is not bool:
         abort(400, description = " Completed needs to be true or false")
 
-    task = Task(title = new_title, completed = new_completed)
+    task = Task(title = new_title, completed = new_completed, user_id=user_id)
     db.session.add(task)  #The task1 instance is added to the SQLAlchemy session (db.session.add(task1)).
     db.session.commit() #The session changes are committed to the database (db.session.commit()), which executes the SQL INSERT statement.
     db.session.refresh(task)
@@ -103,7 +105,8 @@ def create_task():
 
 @tasks_bp.route('/tasks/<int:id>', methods=['DELETE'])
 def delete_task(id):
-    task = Task.query.get(id)
+    user_id = get_jwt_identity()
+    task = Task.query.filter_by(id=id, user_id=user_id).first()
     if not task:
         abort(400, description="Task Not found")
     db.session.delete(task)
