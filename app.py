@@ -10,9 +10,11 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, Column, Integer, String
 from models.task import Task
 from routes import tasks_bp, auth_bp
+from flask_jwt_extended import JWTManager
 
 task_schema = TaskSchema() ## task_schema (single schema) when dealing with a single task (like GET /tasks/<id> or POST /tasks response).
 tasks_schema = TaskSchema(many=True) ##when dealing with a list of tasks.
+
 
 
 
@@ -23,6 +25,7 @@ app.register_blueprint(tasks_bp) # Register the blueprint with the app
 
 app.register_blueprint(tasks_bp)
 app.register_blueprint(auth_bp)
+
 
 class Config():
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
@@ -37,6 +40,7 @@ class Testconfig(Config):
 db.init_app(app)
 
 migrate = Migrate(app, db)  
+jwt = JWTManager(app)
 
 
 
