@@ -80,6 +80,7 @@ def edit_completed(id):
 
 @tasks_bp.route('/tasks', methods=['POST'])
 def create_task():
+    user_id = get_jwt_identity()
     data = request.get_json()
     print(data)
     if not 'completed' or 'title' not in data:
@@ -94,7 +95,7 @@ def create_task():
     if type(new_completed) is not bool:
         abort(400, description = " Completed needs to be true or false")
 
-    task = Task(title = new_title, completed = new_completed)
+    task = Task(title = new_title, completed = new_completed, user_id=user_id)
     db.session.add(task)  #The task1 instance is added to the SQLAlchemy session (db.session.add(task1)).
     db.session.commit() #The session changes are committed to the database (db.session.commit()), which executes the SQL INSERT statement.
     db.session.refresh(task)
@@ -103,7 +104,8 @@ def create_task():
 
 @tasks_bp.route('/tasks/<int:id>', methods=['DELETE'])
 def delete_task(id):
-    task = Task.query.get(id)
+    user_id = get_jwt_identity()
+    task = Task.query.filter_by(id=id, user_id=user_id).first()
     if not task:
         abort(400, description="Task Not found")
     db.session.delete(task)
