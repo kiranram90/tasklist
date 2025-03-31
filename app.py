@@ -25,6 +25,7 @@ app.register_blueprint(tasks_bp) # Register the blueprint with the app
 
 app.register_blueprint(tasks_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(frontend_bp)
 
 
 class Config():
