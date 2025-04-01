@@ -2,6 +2,8 @@ import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from app import app, db, Task # Import the Flask app
+from models.user import User
+from models.task import Task
 
 
 @pytest.fixture
@@ -94,3 +96,44 @@ def test_create_task(client):
     print('this is the title', response.get_json()['completed'])
     assert request_body['title'] == response.get_json()['title']
     assert request_body['completed'] == response.get_json()['completed']
+
+def test_user_model_fields(app_context):
+    user = User(username="sampleuser", emiail="sample@example.com")
+    user.set_password("testpass")
+    db.session.add(user)
+    db.session.commit()
+
+    saved_user=User.query.filter_by(username="sampleuser").first()
+    assert saved_user.username == "sampleuser"
+    assert saved_user.emai == "sample@example.com"
+    assert saved_user.password_hash is not None
+    assert saved_user.check_password("testpass") is True 
+
+
+def test_task_model_fields(app_context):
+    task = Task(title="Test Task", description=" Task Details", status="completed")
+    db.session.add(task)
+    db.session.commit()
+
+    saved_task = Task.query.first()
+    assert saved_task.title == "Test Task"
+    assert saved_task.description == "Task details"
+    assert saved_task.status == "pending"
+
+
+def test_user_task_relationship(app_context):
+    user = User(username="taskmaster", email="master@example.com")
+    user.set_password("password")
+    db.session.add(user)
+    db.session.commit()
+
+    task1 = Task(title="Task 1", user_id=user.id)
+    task2 = Task(title="Task 2", user_id=user.id)
+    db.session.add_all([task1, task2])
+    db.session.commit()
+
+    saved_user = User.query.filter_by(username="taskmaster").first()
+    assert len(saved_user.tasks) == 2
+    task_titles = [task.title for task in saved_user.tasks]
+    assert "Task 1" in task_titles
+    assert "Task 2" in task_titles
