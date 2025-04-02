@@ -137,3 +137,70 @@ def test_user_task_relationship(app_context):
     task_titles = [task.title for task in saved_user.tasks]
     assert "Task 1" in task_titles
     assert "Task 2" in task_titles
+
+
+    def test_get_sign_up(client):
+        response = client.get('/signup')
+        assert response.status_code == 200
+        assert b"<form" in response.data
+
+    def test_post_signup_success(client):
+        expected_statuscode = 201
+
+        request_body = {
+                "username": "newuser",
+                "email": "new@example.com",
+                "password": "testpass"
+            }
+        response = client.post('/signup', json=request_body)
+        assert response.status_code == expected_statuscode
+
+        response_json = response.get_json()
+        print("Signup response:", response_json)
+        assert "message" in response_json
+        assert response_json["message"] == "User created successfully!"
+
+    def test_post_signup_duplicate_user(client):
+
+        expected_statuscode = 400
+
+         # First signup
+        client.post('/signup', json={
+        "username": "dupe",
+        "email": "dupe@example.com",
+        "password": "123"
+        })
+
+        # Try again with same data
+        response = client.post('/signup', json = {
+        "username": "dupe",
+        "email": "dupe@example.com",
+        "password": "123"
+        })
+
+        assert response.status_code == expected_statuscode
+
+        response_json = response.get_json()
+        print("Duplicate response:", response_json)
+
+        assert "error" in response_json
+        assert response_json["error"] == "Username or email already exists"
+
+
+    def test_post_signup_missing_fields(client):
+
+        expected_statuscode =400
+
+        request_body = {
+            "username": "incomplete"
+            # missing email and password
+        }
+
+        response = client.post('/signup', json=request_body)
+        assert response.status_code == expected_statuscode
+
+        response_json = response.get_json
+        print("Missing field response:", response_json)
+
+        assert "error" in response_json
+        assert response_json["error"] ==  "All Fields are required"
