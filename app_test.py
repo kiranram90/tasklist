@@ -206,20 +206,28 @@ def test_user_task_relationship(app_context):
         assert response_json["error"] ==  "All Fields are required"
 
 
-        def test_post_login_wrong_password(client):
+    def test_post_login_wrong_password(client):
     # Sign up first
-    client.post('/signup', json={
-        "username": "wrongpass",
-        "email": "wrong@example.com",
-        "password": "testpass"
-    })
+        client.post('/signup', json={
+            "username": "wrongpass",
+            "email": "wrong@example.com",
+            "password": "testpass"
+        })
 
-    # Try wrong password
-    response = client.post('/login', json={
-        "username": "wrongpass",
-        "password": "badpass"
-    })
+        # Try wrong password
+        response = client.post('/login', json={
+            "username": "wrongpass",
+            "password": "badpass"
+        })
 
-    assert response.status_code == 401
-    response_json = response.get_json()
-    assert "error" in response_json
+        assert response.status_code == 401
+        response_json = response.get_json()
+        assert "error" in response_json
+
+    def test_post_login_missing_fields(client):
+        response = client.post('/login', json={
+            "username": "incomplete"
+            # no password
+        })
+
+        assert response.status_code == 400 or response.status_code == 401
