@@ -1,0 +1,41 @@
+{% extends "base.html" %}  
+{% block content %} 
+
+<h1>Task Dashboard</h1>
+
+  <!-- Add Task Form -->
+  <form method="POST" action="/tasks">
+    <input type="text" name="title" placeholder="Enter task title" required>
+    <button type="submit">Add Task</button>
+  </form>
+
+  <hr>
+
+  <ul>
+    {% for task in tasks %}
+      <li id="task-{{ task.id }}">
+        <span style="text-decoration: {{ 'line-through' if task.completed else 'none' }}">
+          {{ task.title }}
+        </span>
+        <button onclick="toggleTask({{ task.id }})">
+          {{ 'Undo' if task.completed else 'Complete' }}
+        </button>
+        <button onclick="deleteTask({{ task.id }})">Delete</button>
+      </li>
+    {% endfor %}
+  </ul>
+  
+  <!-- JS -->
+  <script>
+    async function toggleTask(taskId) {
+      const res = await fetch(`/tasks/${taskId}/toggle`, { method: 'POST' });
+      if (res.ok) location.reload();
+    }
+
+    async function deleteTask(taskId) {
+      const res = await fetch(`/tasks/${taskId}`, { method: 'DELETE' });
+      if (res.ok) document.getElementById(`task-${taskId}`).remove();
+    }
+  </script>
+
+{% endblock %}
